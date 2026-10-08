@@ -2,7 +2,7 @@
 
 A pass-the-phone party game. Flip a card, and the player on the spot has five seconds to name three things.
 
-<img src="docs/screenshot.png" alt="A revealed card reading 'Name 3: rivers' with the countdown ring running" width="300">
+<img src="docs/screenshot.png" alt="A revealed card reading 'Name 3: keys on a keyboard' with the countdown ring running" width="300">
 
 **Play it:** `https://datakyle.github.io/5-in-3/`
 
