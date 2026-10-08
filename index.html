@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A pass-the-phone party game: flip a card, name three things before the 5-second buzzer.">
+<meta name="theme-color" content="#0A4DFF">
+<title>Name 3 in 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=Space+Mono&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  color-scheme: light;
+  --blue:#0A4DFF; --blue-700:#0838C4; --blue-200:#C2D3FF; --blue-100:#E8EFFF;
+  --warm:#B8906A; --warm-300:#CBA882; --warm-700:#8B6B4E; --warm-50:#FAF4EF;
+  --canvas:#f6f5f4; --surface:#ffffff; --hairline:#e6e6e6; --cream:#F6F4ED;
+  --ink:#15161A; --ink-soft:#5A5C63; --mute:#8A8C93;
+  --display:"Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --text:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"Space Mono", ui-monospace, Menlo, monospace;
+  --r-sm:5px; --r-md:8px; --r-lg:12px; --r-xl:16px;
+  --shadow-1: rgba(0,0,0,.01) 0 .175px 1.041px, rgba(0,0,0,.02) 0 .8px 2.925px, rgba(0,0,0,.027) 0 2.025px 7.847px, rgba(0,0,0,.04) 0 4px 18px;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--canvas);color:var(--ink);font-family:var(--text);font-size:16px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.app{height:100%;max-width:480px;margin:0 auto;padding-inline:16px;padding-block:14px;display:flex;flex-direction:column;gap:12px}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--warm);outline-offset:3px}
+
+/* Top strip + scoreboard */
+.topline{display:flex;justify-content:space-between;align-items:baseline;font-size:.68rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.topline b{font-family:var(--mono);font-weight:400;font-size:.8rem;color:var(--ink);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.board{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-block:2px 4px;margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px}
+.board::-webkit-scrollbar{display:none}
+.player{flex:0 0 auto;min-width:84px;max-width:132px;display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:var(--r-lg);
+  background:var(--surface);border:1px solid var(--hairline);transition:border-color .2s,background .2s}
+.player.reader{border-color:var(--warm-300)}
+.player.active{border-color:var(--blue);background:var(--blue-100)}
+.pname{font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player.active .pname{color:var(--blue)}
+.pscore{font-family:var(--display);font-weight:700;font-size:28px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+
+/* Stage */
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:0}
+.turn{font-size:.95rem;color:var(--ink-soft);text-align:center;line-height:1.45}
+.turn strong{color:var(--blue);font-weight:600}
+.turn span{color:var(--warm-700);font-weight:600}
+
+.card{position:relative;width:100%;max-width:100%;aspect-ratio:4/5;max-height:56vh;perspective:1200px}
+.flip{position:absolute;inset:0;width:100%;transition:transform .5s cubic-bezier(.3,1.3,.5,1);transform-style:preserve-3d}
+.card.shown .flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:var(--r-xl);backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  display:flex;flex-direction:column;padding:22px;text-align:left}
+.back{background:var(--blue);color:var(--cream);justify-content:space-between;overflow:hidden}
+.back .strip{display:flex;justify-content:space-between;font-size:.68rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.back .mark{font-family:var(--display);font-weight:700;font-size:clamp(9rem,46vw,13rem);line-height:.8;letter-spacing:-.05em;transform:skewX(-7deg);display:inline-block;margin-left:-6px}
+.back .mark small{font-size:.32em;letter-spacing:-.03em;color:var(--blue-200);margin-left:.08em}
+.back .hint{font-family:var(--display);font-weight:700;font-size:1.5rem;letter-spacing:-.02em;line-height:1.05}
+.back .hint span{display:block;font-family:var(--text);font-weight:500;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--blue-200);margin-top:8px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.4}}
+.front{background:var(--surface);color:var(--ink);transform:rotateY(180deg);justify-content:space-between;box-shadow:var(--shadow-1);border:1px solid var(--hairline)}
+.eyebrow{font-size:.7rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--warm)}
+.q{font-family:var(--display);font-weight:700;font-size:clamp(28px,8.4vw,40px);line-height:1.04;letter-spacing:-.025em;text-wrap:balance}
+.q em{font-style:normal;color:var(--blue)}
+.cardfoot{display:flex;justify-content:space-between;align-items:flex-end}
+.cardfoot .meta{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+
+.timer{position:relative;width:84px;height:84px}
+.timer svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer .track{fill:none;stroke:var(--blue-100);stroke-width:8}
+.timer .ring{fill:none;stroke:var(--blue);stroke-width:8;stroke-linecap:round;transition:stroke .2s}
+.timer.warn .ring{stroke:var(--warm)}
+.timer .num{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:34px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.timer.warn .num{color:var(--warm-700)}
+.timer.done .num{font-family:var(--mono);font-weight:400;font-size:.8rem;letter-spacing:.12em;color:var(--warm-700)}
+.card.buzz .front{animation:shake .4s}
+@keyframes shake{20%,60%{transform:rotateY(180deg) translateX(-7px)}40%,80%{transform:rotateY(180deg) translateX(7px)}}
+
+.verdict{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.btn{font-family:var(--text);font-weight:600;font-size:1rem;border-radius:var(--r-md);padding:15px 12px;border:1px solid transparent;transition:background .15s,border-color .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-ghost{background:var(--surface);color:var(--ink);border-color:var(--hairline)}
+.btn-ghost:hover{border-color:var(--ink)}
+.footer{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--mute)}
+.footer button{padding:8px 2px;color:var(--ink-soft);text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:4px}
+
+/* Setup + end */
+.sheet{position:fixed;inset:0;background:var(--canvas);z-index:5;overflow-y:auto}
+.hero{background:var(--blue);color:var(--cream);padding-inline:16px;padding-block:calc(env(safe-area-inset-top,0px) + 20px) 28px}
+.hero-in,.sheet-body{max-width:420px;margin:0 auto}
+.hero .strip{display:flex;justify-content:space-between;font-size:.68rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:18px}
+.logo{font-family:var(--display);font-weight:700;font-size:clamp(4.4rem,22vw,6.2rem);line-height:.84;letter-spacing:-.045em;transform:skewX(-7deg);display:inline-block;padding-left:.06em}
+.logo span{color:var(--blue-200)}
+.sub{font-size:.95rem;color:rgba(255,255,255,.72);line-height:1.6;margin:16px 0 0;max-width:40ch}
+.sheet-body{padding-inline:16px;padding-block:24px calc(env(safe-area-inset-bottom,0px) + 28px);display:flex;flex-direction:column;gap:22px}
+.label{font-size:.68rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.group{display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;gap:8px;align-items:center}
+.prow input{flex:1;min-width:0;font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--hairline);
+  border-radius:var(--r-md);padding:12px 14px;user-select:text;-webkit-user-select:text}
+.prow input:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px var(--blue-100)}
+.prow input::placeholder{color:var(--mute)}
+.rm{width:46px;height:46px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--hairline);font-size:20px;line-height:1;color:var(--mute);flex:0 0 auto}
+.rm:disabled{opacity:.35;cursor:default}
+.add{padding:12px;border-radius:var(--r-md);border:1px dashed var(--blue-200);background:var(--blue-100);color:var(--blue);font-weight:600}
+.add:disabled{opacity:.5;cursor:default}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.seg button{padding:11px 0;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--hairline);font-family:var(--display);font-weight:700;font-size:1.05rem}
+.seg button[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-100);color:var(--blue)}
+.note{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:var(--mute)}
+.rules{margin:0;padding:16px 16px 16px 34px;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-lg);color:var(--ink-soft);line-height:1.6;font-size:.9rem}
+.rules li::marker{font-family:var(--mono);color:var(--warm)}
+.cta{background:var(--blue);color:#fff;font-weight:600;font-size:1.05rem;padding:16px;border-radius:var(--r-md)}
+.cta:hover{background:var(--blue-700)}
+.winner{font-family:var(--display);font-weight:700;font-size:clamp(2.6rem,12vw,3.4rem);line-height:.95;letter-spacing:-.035em;text-wrap:balance;margin-top:6px}
+.winner span{color:var(--blue-200)}
+.ranks{display:flex;flex-direction:column;margin:0;padding:0;list-style:none;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-lg);overflow:hidden}
+.ranks li{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--hairline)}
+.ranks li:first-child{border-top:0}
+.ranks .pos{font-family:var(--mono);font-size:.8rem;color:var(--mute)}
+.ranks li.top .pos{color:var(--warm)}
+.ranks .who{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ranks .pts{font-family:var(--display);font-weight:700;font-size:1.4rem;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ranks li.top .pts{color:var(--blue)}
+.link{text-align:center;color:var(--ink-soft);text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:4px;padding:6px}
+@media (prefers-reduced-motion:reduce){.flip,.player{transition:none}.back .hint span,.card.buzz .front{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topline"><span>Scores</span><span>Card <b id="roundNum">1/10</b></span></div>
+  <div class="board" id="board"></div>
+
+  <div class="stage">
+    <div class="turn" id="turnLine"></div>
+
+    <div class="card" id="card">
+      <button class="flip" id="flipBtn" aria-label="Reveal the card and start the timer">
+        <div class="face back">
+          <div class="strip"><span>Name 3 in 5</span><span>5 sec</span></div>
+          <div class="mark">3<small>in 5</small></div>
+          <div class="hint">Name three, fast.<span>Tap to reveal</span></div>
+        </div>
+        <div class="face front">
+          <div class="eyebrow">Name 3</div>
+          <div class="q" id="question">…</div>
+          <div class="cardfoot">
+            <span class="meta" id="cardMeta"></span>
+            <div class="timer" id="timer">
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="track" cx="50" cy="50" r="42"/>
+                <circle class="ring" id="ring" cx="50" cy="50" r="42"/>
+              </svg>
+              <div class="num" id="num">5</div>
+            </div>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <div class="verdict" id="verdict" hidden>
+      <button class="btn btn-ghost" id="missBtn">Missed it</button>
+      <button class="btn btn-primary" id="gotBtn">Got all 3 &nbsp;+1</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button id="skipBtn">Skip card</button>
+    <button id="newBtn">New game</button>
+  </div>
+</div>
+
+<div class="sheet" id="setup">
+  <header class="hero">
+    <div class="hero-in">
+      <div class="strip"><span>Party game</span><span>2 to 12 players</span></div>
+      <div class="logo">Name 3<br><span>in 5.</span></div>
+      <p class="sub">Someone reads a card out loud. The player on the spot has five seconds to name three. Pass the phone and keep going.</p>
+    </div>
+  </header>
+  <div class="sheet-body">
+    <div class="group">
+      <span class="label" id="playersLabel">Players</span>
+      <div class="group" id="plist" role="group" aria-labelledby="playersLabel"></div>
+      <button class="add" id="addBtn">+ Add player</button>
+    </div>
+    <div class="group">
+      <span class="label" id="lenLabel">Cards per player</span>
+      <div class="seg" id="lenSeg" role="group" aria-labelledby="lenLabel">
+        <button data-n="3" aria-pressed="false">3</button>
+        <button data-n="5" aria-pressed="true">5</button>
+        <button data-n="10" aria-pressed="false">10</button>
+        <button data-n="15" aria-pressed="false">15</button>
+      </div>
+      <span class="note" id="lenNote"></span>
+    </div>
+    <ol class="rules">
+      <li>Tap the card. It flips and the 5-second clock starts.</li>
+      <li>Three answers before the buzzer earns a point.</li>
+      <li>The next player in line reads and judges. Arguing is encouraged.</li>
+    </ol>
+    <button class="cta" id="startBtn">Start game</button>
+  </div>
+</div>
+
+<div class="sheet" id="end" hidden>
+  <header class="hero">
+    <div class="hero-in">
+      <div class="strip"><span>Final scores</span><span id="endCount"></span></div>
+      <div class="winner" id="winner"></div>
+    </div>
+  </header>
+  <div class="sheet-body">
+    <ol class="ranks" id="ranks"></ol>
+    <button class="cta" id="againBtn">Rematch</button>
+    <button class="link" id="editBtn">Change players</button>
+  </div>
+</div>
+
+<script src="questions.js"></script>
+<script>
+const QUESTIONS = window.QUESTIONS || [];
+const MAXP = 12, MINP = 2, SECS = 5, R = 42, C = 2*Math.PI*R;
+const $ = id => document.getElementById(id);
+const ring = $("ring"); ring.style.strokeDasharray = C;
+
+let names=[], scores=[], perPlayer=5, turn=0, played=0, deck=[], raf=null, phase="ready", audio=null;
+let draft=["",""];
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+// The deck is saved on this phone, so no card repeats (even across games) until all have been played.
+const DECK_KEY="name3in5-deck-v3";
+try{ const saved=JSON.parse(localStorage.getItem(DECK_KEY)||"[]"); deck=saved.filter(q=>QUESTIONS.includes(q)); }catch(e){}
+function nextQ(){
+  if(!deck.length) deck = shuffle(QUESTIONS.slice());
+  const q = deck.pop();
+  try{ localStorage.setItem(DECK_KEY, JSON.stringify(deck)); }catch(e){}
+  return q;
+}
+
+function beep(freq, dur, type="sine", vol=.18){
+  try{
+    audio = audio || new (window.AudioContext||window.webkitAudioContext)();
+    const o=audio.createOscillator(), g=audio.createGain();
+    o.type=type; o.frequency.value=freq;
+    o.connect(g); g.connect(audio.destination);
+    const t=audio.currentTime; g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.start(t); o.stop(t+dur);
+  }catch(e){}
+}
+
+/* ---------- Setup ---------- */
+function renderPlayers(){
+  const list=$("plist"); list.innerHTML="";
+  draft.forEach((v,i)=>{
+    const row=document.createElement("div"); row.className="prow";
+    row.innerHTML=`<input id="pl${i}" placeholder="Player ${i+1}" maxlength="14" autocomplete="off" aria-label="Player ${i+1} name">
+      <button class="rm" aria-label="Remove player ${i+1}" ${draft.length<=MINP?"disabled":""}>×</button>`;
+    const inp=row.querySelector("input"); inp.value=v;
+    inp.addEventListener("input",()=>{draft[i]=inp.value});
+    inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); if(i===draft.length-1) addPlayer(); else $("pl"+(i+1)).focus(); }});
+    row.querySelector(".rm").addEventListener("click",()=>{ draft.splice(i,1); renderPlayers(); });
+    list.appendChild(row);
+  });
+  $("addBtn").disabled = draft.length>=MAXP;
+  $("addBtn").textContent = draft.length>=MAXP ? `${MAXP} players max` : "+ Add player";
+  updateLenNote();
+}
+function addPlayer(){ if(draft.length>=MAXP) return; draft.push(""); renderPlayers(); $("pl"+(draft.length-1)).focus(); }
+function updateLenNote(){
+  const total = draft.length*perPlayer;
+  $("lenNote").textContent = `${draft.length} players × ${perPlayer} = ${total} cards, about ${Math.max(1,Math.round(total*20/60))} min.`;
+}
+
+/* ---------- Game ---------- */
+function render(){
+  const b=$("board"); b.innerHTML="";
+  const reader=(turn+1)%names.length;
+  names.forEach((n,i)=>{
+    const el=document.createElement("div");
+    el.className="player"+(i===turn?" active":"")+(i===reader?" reader":"");
+    el.innerHTML=`<span class="pname">${esc(n)}</span><span class="pscore">${scores[i]}</span>`;
+    b.appendChild(el);
+  });
+  const act=b.children[turn]; if(act) act.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"});
+  const total=perPlayer*names.length;
+  $("roundNum").textContent = `${Math.min(played+1,total)}/${total}`;
+  const pad=n=>String(n).padStart(2,"0");
+  $("cardMeta").textContent = `${pad(Math.min(played+1,total))} / ${pad(total)}`;
+  $("turnLine").innerHTML = `<strong>${esc(names[turn])}</strong> is on the spot.<br><span>${esc(names[reader])}</span> reads it out loud.`;
+}
+function setRing(frac){ ring.style.strokeDashoffset = C*(1-frac); }
+
+function resetCard(){
+  cancelAnimationFrame(raf);
+  phase="ready";
+  $("card").classList.remove("shown","buzz");
+  $("verdict").hidden=true;
+  $("timer").classList.remove("warn","done");
+  $("num").textContent=SECS; setRing(1);
+  setTimeout(()=>{ $("question").innerHTML = nextQ(); }, 250);
+  render();
+}
+
+function reveal(){
+  if(phase!=="ready") return;
+  phase="running";
+  $("card").classList.add("shown");
+  beep(660,.12,"triangle");
+  const start = performance.now()+350; let lastSec = SECS;
+  const tick = now=>{
+    const left = Math.max(0,SECS-Math.max(0,(now-start)/1000));
+    setRing(left/SECS);
+    const sec = Math.ceil(left);
+    if(sec!==lastSec && sec>0){ lastSec=sec; beep(sec<=2?880:520,.08,"square",.08); }
+    $("num").textContent = sec;
+    $("timer").classList.toggle("warn", left<=2);
+    if(left<=0){ timeUp(); return; }
+    raf=requestAnimationFrame(tick);
+  };
+  raf=requestAnimationFrame(tick);
+  $("verdict").hidden=false;
+}
+function timeUp(){
+  phase="done";
+  $("timer").classList.add("done"); $("num").textContent="TIME";
+  $("card").classList.add("buzz");
+  beep(180,.5,"sawtooth",.2);
+  try{navigator.vibrate&&navigator.vibrate([120,60,120])}catch(e){}
+}
+function score(got){
+  if(phase==="ready") return;
+  if(got){ scores[turn]++; beep(990,.15,"triangle"); }
+  played++;
+  if(played>=perPlayer*names.length) return finish();
+  turn=(turn+1)%names.length;
+  resetCard();
+}
+function finish(){
+  cancelAnimationFrame(raf);
+  const order=names.map((n,i)=>({n,s:scores[i]})).sort((a,b)=>b.s-a.s);
+  const top=order[0].s, leaders=order.filter(p=>p.s===top);
+  $("winner").innerHTML = leaders.length===1 ? `<span>${esc(leaders[0].n)}</span> wins.` :
+    `It's a tie.<br><span>${leaders.map(p=>esc(p.n)).join(" & ")}</span>`;
+  let pos=0,prev=null;
+  $("ranks").innerHTML = order.map((p,i)=>{ if(p.s!==prev){pos=i+1;prev=p.s}
+    return `<li class="${p.s===top?"top":""}"><span class="pos">${pos}</span><span class="who">${esc(p.n)}</span><span class="pts">${p.s}</span></li>`;}).join("");
+  $("endCount").textContent = `${played} cards played`;
+  $("end").hidden=false;
+}
+function newGame(){
+  scores=names.map(()=>0); played=0; turn=0;
+  $("end").hidden=true; $("setup").hidden=true;
+  resetCard();
+}
+
+$("flipBtn").addEventListener("click", reveal);
+$("gotBtn").addEventListener("click", ()=>score(true));
+$("missBtn").addEventListener("click", ()=>score(false));
+$("skipBtn").addEventListener("click", resetCard);
+$("newBtn").addEventListener("click", ()=>{ cancelAnimationFrame(raf); draft=names.slice(); renderPlayers(); $("setup").hidden=false; });
+$("editBtn").addEventListener("click", ()=>{ draft=names.slice(); renderPlayers(); $("end").hidden=true; $("setup").hidden=false; });
+$("againBtn").addEventListener("click", newGame);
+$("addBtn").addEventListener("click", addPlayer);
+$("lenSeg").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  perPlayer=+b.dataset.n;
+  document.querySelectorAll("#lenSeg button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+  updateLenNote();
+});
+$("startBtn").addEventListener("click", ()=>{
+  names = draft.map((v,i)=>v.trim()||`Player ${i+1}`);
+  beep(440,.01,"sine",.001); // unlocks sound on iPhone
+  newGame();
+});
+
+renderPlayers();
+</script>
+
+</body>
+</html>
