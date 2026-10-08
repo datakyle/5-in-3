@@ -130,7 +130,33 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .ranks .pts{font-family:var(--display);font-weight:700;font-size:1.4rem;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .ranks li.top .pts{color:var(--blue)}
 .link{text-align:center;color:var(--ink-soft);text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:4px;padding:6px}
-@media (prefers-reduced-motion:reduce){.flip,.player{transition:none}.back .hint span,.card.buzz .front{animation:none}}
+/* Categories + 18+ */
+.label-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.label-row button{font-size:.78rem;font-weight:600;color:var(--blue);padding:4px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:baseline;gap:6px;padding:9px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--hairline);font-size:.88rem;font-weight:600;color:var(--ink-soft)}
+.chip small{font-family:var(--mono);font-size:.68rem;font-weight:400;color:var(--mute)}
+.chip[aria-pressed="true"]{background:var(--blue-100);border-color:var(--blue-200);color:var(--blue)}
+.chip[aria-pressed="true"] small{color:var(--blue)}
+.chip.adult[aria-pressed="true"]{background:var(--warm-50);border-color:var(--warm-300);color:var(--warm-700)}
+.chip.adult[aria-pressed="true"] small{color:var(--warm-700)}
+.adult-box{display:flex;flex-direction:column;gap:10px;padding:14px 16px;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-lg)}
+.adult-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.adult-row strong{font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
+.adult-row p{margin:2px 0 0;font-size:.82rem;color:var(--ink-soft);line-height:1.4}
+.tag18{font-family:var(--text);font-size:.62rem;font-weight:600;letter-spacing:.04em;padding:3px 8px;border-radius:999px;border:1px solid #E0CBBA;color:var(--warm-700);background:#FAF2EB;vertical-align:2px;margin-left:6px}
+.switch{flex:0 0 auto;width:52px;height:30px;border-radius:999px;background:var(--hairline);position:relative;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:var(--shadow-1);transition:transform .2s}
+.switch[aria-checked="true"]{background:var(--warm)}
+.switch[aria-checked="true"]::after{transform:translateX(22px)}
+.confirm{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.88rem;color:var(--ink)}
+.confirm .btn{padding:9px 14px;font-size:.88rem}
+.btn-warm{background:var(--warm);color:#fff}
+.fresh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.fresh button{font-size:.78rem;font-weight:600;color:var(--ink-soft);text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:4px;padding:4px 0}
+.eyebrow .cat{color:var(--mute)}
+.front.adult .eyebrow{color:var(--warm-700)}
+@media (prefers-reduced-motion:reduce){.flip,.player,.switch,.switch::after{transition:none}.back .hint span,.card.buzz .front{animation:none}}
 </style>
 </head>
 <body>
@@ -149,8 +175,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
           <div class="mark">3<small>in 5</small></div>
           <div class="hint">Name three, fast.<span>Tap to reveal</span></div>
         </div>
-        <div class="face front">
-          <div class="eyebrow">Name 3</div>
+        <div class="face front" id="front">
+          <div class="eyebrow">Name 3 <span class="cat" id="catLabel"></span></div>
           <div class="q" id="question">…</div>
           <div class="cardfoot">
             <span class="meta" id="cardMeta"></span>
@@ -202,6 +228,22 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
       </div>
       <span class="note" id="lenNote"></span>
     </div>
+    <div class="group">
+      <div class="label-row"><span class="label" id="catsLabel">Categories</span><button id="allCats">Select all</button></div>
+      <div class="chips" id="chips" role="group" aria-labelledby="catsLabel"></div>
+      <div class="fresh"><span class="note" id="freshNote"></span><span id="resetWrap"><button id="resetBtn">Reset seen cards</button></span></div>
+    </div>
+    <div class="adult-box">
+      <div class="adult-row">
+        <div><strong>After Dark<span class="tag18">18+</span></strong><p>Drinking, dating, and cheeky cards. Adults only.</p></div>
+        <button class="switch" id="adultSwitch" role="switch" aria-checked="false" aria-label="After Dark 18+ cards"></button>
+      </div>
+      <div class="confirm" id="adultConfirm" hidden>
+        <span>Is everyone playing 18 or older?</span>
+        <button class="btn btn-warm" id="adultYes">Yes, turn it on</button>
+        <button class="btn btn-ghost" id="adultNo">Cancel</button>
+      </div>
+    </div>
     <ol class="rules">
       <li>Tap the card. It flips and the 5-second clock starts.</li>
       <li>Three answers before the buzzer earns a point.</li>
@@ -226,26 +268,54 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 </div>
 
 <script src="questions.js"></script>
+<script src="deck.js"></script>
 <script>
-const QUESTIONS = window.QUESTIONS || [];
+const CATS = window.CATEGORIES || [];
+const CARDS = Deck.buildCards(CATS);
 const MAXP = 12, MINP = 2, SECS = 5, R = 42, C = 2*Math.PI*R;
 const $ = id => document.getElementById(id);
 const ring = $("ring"); ring.style.strokeDasharray = C;
 
-let names=[], scores=[], perPlayer=5, turn=0, played=0, deck=[], raf=null, phase="ready", audio=null;
+let names=[], scores=[], perPlayer=5, turn=0, played=0, raf=null, phase="ready", audio=null, current=null;
 let draft=["",""];
 
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function load(key, fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
+function save(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
 
-// The deck is saved on this phone, so no card repeats (even across games) until all have been played.
-const DECK_KEY="name3in5-deck-v3";
-try{ const saved=JSON.parse(localStorage.getItem(DECK_KEY)||"[]"); deck=saved.filter(q=>QUESTIONS.includes(q)); }catch(e){}
-function nextQ(){
-  if(!deck.length) deck = shuffle(QUESTIONS.slice());
-  const q = deck.pop();
-  try{ localStorage.setItem(DECK_KEY, JSON.stringify(deck)); }catch(e){}
-  return q;
+const deck = Deck.createDeck(CARDS, { load: () => load("n3i5-seen-v1", {}), save: (v) => save("n3i5-seen-v1", v) });
+
+// Settings: chosen categories and 18+ mode, remembered on this device.
+const settings = load("n3i5-settings-v1", null) || {};
+let adultOn = !!settings.adult;
+let chosen = new Set((settings.cats || CATS.filter(c=>!c.adult).map(c=>c.id)).filter(id=>CATS.some(c=>c.id===id)));
+if(!adultOn) CATS.filter(c=>c.adult).forEach(c=>chosen.delete(c.id));
+if(![...chosen].length) CATS.filter(c=>!c.adult).forEach(c=>chosen.add(c.id));
+const saveSettings = () => save("n3i5-settings-v1", { adult: adultOn, cats: [...chosen] });
+const visibleCats = () => CATS.filter(c => !c.adult || adultOn);
+
+function renderCats(){
+  $("chips").innerHTML = visibleCats().map(c =>
+    `<button class="chip${c.adult?" adult":""}" data-id="${c.id}" aria-pressed="${chosen.has(c.id)}">${esc(c.name)} <small>${c.q.length}</small></button>`).join("");
+  const allOn = visibleCats().every(c=>chosen.has(c.id));
+  $("allCats").textContent = allOn ? "Clear" : "Select all";
+  $("adultSwitch").setAttribute("aria-checked", adultOn);
+  updateFresh();
+}
+function updateFresh(){
+  const total = deck.poolSize(chosen), fresh = deck.freshCount(chosen);
+  $("freshNote").textContent = fresh === total ? `${total} cards, all new on this device`
+    : `${fresh} of ${total} cards still new on this device`;
+  const rb=$("resetBtn"); if(rb) rb.hidden = fresh === total;
+  $("startBtn").disabled = total === 0;
+  $("startBtn").textContent = total === 0 ? "Pick at least one category" : "Start game";
+}
+function drawCard(){
+  current = deck.draw(chosen);
+  if(!current){ deck.newGame(); current = deck.draw(chosen); } // tiny pool: allow repeats rather than stall
+  $("question").innerHTML = current.text;
+  $("catLabel").textContent = "· " + current.catName;
+  $("front").classList.toggle("adult", current.adult);
 }
 
 function beep(freq, dur, type="sine", vol=.18){
@@ -308,7 +378,7 @@ function resetCard(){
   $("verdict").hidden=true;
   $("timer").classList.remove("warn","done");
   $("num").textContent=SECS; setRing(1);
-  setTimeout(()=>{ $("question").innerHTML = nextQ(); }, 250);
+  setTimeout(drawCard, 250);
   render();
 }
 
@@ -316,6 +386,7 @@ function reveal(){
   if(phase!=="ready") return;
   phase="running";
   $("card").classList.add("shown");
+  if(current) deck.markSeen(current);
   beep(660,.12,"triangle");
   const start = performance.now()+350; let lastSec = SECS;
   const tick = now=>{
@@ -360,6 +431,7 @@ function finish(){
 }
 function newGame(){
   scores=names.map(()=>0); played=0; turn=0;
+  deck.newGame();
   $("end").hidden=true; $("setup").hidden=true;
   resetCard();
 }
@@ -367,9 +439,9 @@ function newGame(){
 $("flipBtn").addEventListener("click", reveal);
 $("gotBtn").addEventListener("click", ()=>score(true));
 $("missBtn").addEventListener("click", ()=>score(false));
-$("skipBtn").addEventListener("click", resetCard);
-$("newBtn").addEventListener("click", ()=>{ cancelAnimationFrame(raf); draft=names.slice(); renderPlayers(); $("setup").hidden=false; });
-$("editBtn").addEventListener("click", ()=>{ draft=names.slice(); renderPlayers(); $("end").hidden=true; $("setup").hidden=false; });
+$("skipBtn").addEventListener("click", ()=>{ if(current && phase==="ready") deck.pass(current); resetCard(); });
+$("newBtn").addEventListener("click", ()=>{ cancelAnimationFrame(raf); draft=names.slice(); renderPlayers(); renderCats(); $("setup").hidden=false; });
+$("editBtn").addEventListener("click", ()=>{ draft=names.slice(); renderPlayers(); renderCats(); $("end").hidden=true; $("setup").hidden=false; });
 $("againBtn").addEventListener("click", newGame);
 $("addBtn").addEventListener("click", addPlayer);
 $("lenSeg").addEventListener("click", e=>{
@@ -384,7 +456,41 @@ $("startBtn").addEventListener("click", ()=>{
   newGame();
 });
 
+$("chips").addEventListener("click", e=>{
+  const b=e.target.closest(".chip"); if(!b) return;
+  const id=b.dataset.id; chosen.has(id) ? chosen.delete(id) : chosen.add(id);
+  saveSettings(); renderCats();
+});
+$("allCats").addEventListener("click", ()=>{
+  const vis=visibleCats(), allOn=vis.every(c=>chosen.has(c.id));
+  vis.forEach(c=> allOn ? chosen.delete(c.id) : chosen.add(c.id));
+  saveSettings(); renderCats();
+});
+$("adultSwitch").addEventListener("click", ()=>{
+  if(adultOn){
+    adultOn=false; CATS.filter(c=>c.adult).forEach(c=>chosen.delete(c.id));
+    if(![...chosen].length) CATS.filter(c=>!c.adult).forEach(c=>chosen.add(c.id));
+    saveSettings(); renderCats();
+  } else { $("adultConfirm").hidden=false; $("adultYes").focus(); }
+});
+$("adultYes").addEventListener("click", ()=>{
+  adultOn=true; CATS.filter(c=>c.adult).forEach(c=>chosen.add(c.id));
+  $("adultConfirm").hidden=true; saveSettings(); renderCats();
+});
+$("adultNo").addEventListener("click", ()=>{ $("adultConfirm").hidden=true; $("adultSwitch").focus(); });
+function askReset(){
+  $("resetWrap").innerHTML = `<span class="confirm">Forget seen cards? <button class="btn btn-ghost" id="resetYes">Yes</button><button class="btn btn-ghost" id="resetNo">No</button></span>`;
+  $("resetYes").onclick=()=>{ deck.reset(chosen); restoreReset(); };
+  $("resetNo").onclick=restoreReset;
+}
+function restoreReset(){
+  $("resetWrap").innerHTML='<button id="resetBtn">Reset seen cards</button>';
+  $("resetBtn").onclick=askReset; updateFresh();
+}
+$("resetBtn").onclick=askReset;
+
 renderPlayers();
+renderCats();
 </script>
 
 </body>
