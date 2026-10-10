@@ -1,3 +1,5 @@
+<p align="center"><img src="logo.svg" alt="Name 3 in 5 logo" width="132" height="132"></p>
+
 # Name 3 in 5
 
 **Flip a card. Name three things. You've got five seconds. Go.**
