@@ -2,18 +2,18 @@
 
 A pass-the-phone party game. Flip a card, and the player on the spot has five seconds to name three things.
 
-<img src="docs/screenshot.png" alt="A revealed card reading 'Name 3: keys on a keyboard' with the countdown ring running" width="300">
+<img src="docs/screenshot.png" alt="A revealed card with a Start timer button below it" width="300">
 
 **Play it:** `https://datakyle.github.io/5-in-3/`
 
 ## How to play
 
-1. Add 2 to 12 players and pick how many cards each person gets.
-2. The player on the spot taps the card. It flips and the 5-second clock starts.
-3. The next player in line reads the card out loud and judges.
-4. Three answers before the buzzer earns a point. Pass the phone.
+1. Add 2 to 12 players and pick your categories.
+2. Tap **Reveal card**. The next player in line reads it out loud.
+3. Tap **Start timer** when they're done reading. The player on the spot has five seconds to name three.
+4. The reader judges: **Got all 3** earns a point. Then the phone passes to the next player.
 
-The highest score wins when the cards run out.
+The highest score wins when the cards run out, or whenever you tap **End game**.
 
 ## Features
 

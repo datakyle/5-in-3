@@ -30,69 +30,78 @@ body{background:var(--canvas);color:var(--ink);font-family:var(--font);font-size
   font-variant-numeric:tabular-nums}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 :focus-visible{outline:2px solid var(--blue);outline-offset:3px}
-.label,.topline,.strip,.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);line-height:1.3}
+.label,.strip,.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--body);line-height:1.3}
 
-/* Game screen */
-.app{height:100%;max-width:480px;margin:0 auto;padding-inline:16px;padding-block:16px;display:flex;flex-direction:column;gap:12px}
-.topline{display:flex;justify-content:space-between;align-items:baseline}
-.topline b{font-weight:600;color:var(--ink);letter-spacing:0}
-.board{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px}
+/* Game screen: grows to fit the phone, scrolls instead of overlapping on short screens */
+.app{min-height:100%;max-width:480px;margin:0 auto;padding-inline:16px;padding-block:12px 16px;display:flex;flex-direction:column;gap:12px}
+.topbar,.endbar{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:40px}
+.topbar .label b{font-weight:600;color:var(--ink);letter-spacing:0;text-transform:none;font-size:14px}
+.textbtn{font-size:15px;font-weight:500;color:var(--blue);padding:8px 0 8px 12px}
+.endbar{background:var(--parchment);border-radius:14px;padding:8px 8px 8px 16px;font-size:15px;font-weight:500;flex-wrap:wrap}
+.endbar div{display:flex;gap:8px}
+.btn-sm{padding:9px 14px;font-size:14px;min-height:0}
+.board{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px;flex:0 0 auto}
 .board::-webkit-scrollbar{display:none}
-.player{flex:0 0 auto;min-width:84px;max-width:132px;display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:14px;background:var(--parchment)}
-.pname{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player{flex:0 0 auto;min-width:80px;max-width:132px;display:flex;flex-direction:column;gap:2px;padding:9px 14px;border-radius:14px;background:var(--parchment)}
+.pname{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player.active .pname{color:var(--ink)}
 .player.active .pname::before{content:"";flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--amber)}
-.pscore{font-weight:600;font-size:28px;line-height:1.05;letter-spacing:-.03em;color:var(--body)}
+.pscore{font-weight:600;font-size:26px;line-height:1.05;letter-spacing:-.03em;color:var(--body)}
 .player.active .pscore{color:var(--ink)}
 
-.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:0}
-.turn{font-size:15px;color:var(--body);text-align:center;line-height:1.5}
+.stage{flex:1 1 auto;display:flex;flex-direction:column;gap:12px;min-height:0}
+.turn{font-size:16px;color:var(--body);text-align:center;line-height:1.4}
 .turn strong,.turn span{color:var(--ink);font-weight:600}
 
-.card{position:relative;width:100%;max-width:100%;aspect-ratio:4/5;max-height:56vh;perspective:1200px}
+.card{position:relative;flex:1 1 auto;width:100%;min-height:300px;max-height:560px;perspective:1200px}
 .flip{position:absolute;inset:0;width:100%;transition:transform .5s cubic-bezier(.3,1.25,.5,1);transform-style:preserve-3d}
 .card.shown .flip{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;border-radius:var(--r-card);backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:28px;text-align:left}
+.face{position:absolute;inset:0;border-radius:var(--r-card);backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:24px;text-align:left;overflow:hidden}
 .back{background:var(--dark);color:var(--on-dark)}
 .back .strip{display:flex;justify-content:space-between;color:var(--on-dark-2)}
-.back .mark{font-weight:600;font-size:clamp(8.5rem,42vw,12rem);line-height:.85;letter-spacing:-.06em}
+.back .mark{font-weight:600;font-size:clamp(5.5rem,min(38vw,22svh),11rem);line-height:.85;letter-spacing:-.06em}
 .back .mark small{font-size:.28em;letter-spacing:-.03em;color:var(--on-dark-2);margin-left:.1em}
-.back .hint{font-weight:600;font-size:22px;letter-spacing:-.02em;line-height:1.15}
-.back .hint span{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-dark-2);margin-top:10px;animation:pulse 1.6s ease-in-out infinite}
+.back .hint{font-weight:600;font-size:21px;letter-spacing:-.02em;line-height:1.15}
+.back .hint span{display:block;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-dark-2);margin-top:8px;animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.45}}
 .front{background:var(--parchment);color:var(--ink);transform:rotateY(180deg)}
-.eyebrow .cat{color:var(--mute)}
-.q{font-weight:600;font-size:clamp(30px,8.6vw,42px);line-height:1.08;letter-spacing:-.03em;text-wrap:balance}
+.eyebrow{display:flex;justify-content:space-between;gap:12px;color:var(--body)}
+.eyebrow .cat{color:var(--mute);text-align:right}
+.q{font-weight:600;font-size:clamp(26px,7.6vw,38px);line-height:1.1;letter-spacing:-.025em;text-wrap:balance;overflow-wrap:break-word}
 .q em{font-style:normal;text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:var(--mute);text-underline-offset:5px}
-.cardfoot{display:flex;justify-content:space-between;align-items:flex-end}
-.cardfoot .meta{font-size:13px;color:var(--mute)}
+.cardfoot{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.status{font-size:15px;font-weight:500;color:var(--body);line-height:1.35;max-width:16ch}
 
-.timer{position:relative;width:80px;height:80px}
+.timer{position:relative;flex:0 0 auto;width:76px;height:76px}
 .timer svg{width:100%;height:100%;transform:rotate(-90deg)}
 .timer .track{fill:none;stroke:var(--line);stroke-width:7}
 .timer .ring{fill:none;stroke:var(--ink);stroke-width:7;stroke-linecap:round}
-.timer .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:600;font-size:30px;letter-spacing:-.03em}
+.timer .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:600;font-size:28px;letter-spacing:-.03em}
+.timer.idle .ring{stroke:var(--line)}
+.timer.idle .num{color:var(--mute)}
 .timer.warn .num{animation:tick .5s ease-in-out infinite alternate}
 @keyframes tick{to{transform:scale(1.12)}}
-.timer.done .num{font-size:11px;letter-spacing:.08em;color:var(--body);animation:none}
+.timer.done .num{font-size:12px;letter-spacing:.08em;color:var(--body);animation:none}
 .card.buzz .front{animation:shake .4s}
 @keyframes shake{20%,60%{transform:rotateY(180deg) translateX(-7px)}40%,80%{transform:rotateY(180deg) translateX(7px)}}
 
-.verdict{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
-.btn{font-weight:500;font-size:15px;border-radius:var(--r-btn);padding:14px 20px;border:1px solid transparent;transition:background .15s,color .15s}
+.actions{flex:0 0 auto}
+.actions .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions .row.one{grid-template-columns:1fr}
+.actions .row.split{grid-template-columns:1fr 2fr}
+.btn{font-weight:500;font-size:17px;border-radius:var(--r-btn);padding:14px 20px;min-height:56px;border:1px solid transparent;transition:background .15s,color .15s}
 .btn:active{transform:scale(.98)}
 .btn-primary{background:var(--blue);color:#fff}
 .btn-primary:hover{background:var(--blue-hover)}
 .btn-ghost{background:transparent;color:var(--blue);border-color:var(--blue)}
 .btn-ghost:hover{background:var(--blue-tint)}
-.footer{display:flex;justify-content:space-between;align-items:center;font-size:14px}
-.footer button{padding:8px 2px;color:var(--blue);font-weight:500}
+@media (max-height:600px){.card{min-height:270px}.face{padding:20px}.player{padding:7px 12px}.pscore{font-size:22px}}
 
 /* Setup and results */
 .sheet{position:fixed;inset:0;background:var(--parchment);z-index:5;overflow-y:auto}
 .hero{background:var(--canvas);padding-inline:16px;padding-block:calc(env(safe-area-inset-top,0px) + 28px) 36px}
 .hero-in,.sheet-body{max-width:440px;margin:0 auto}
-.hero .strip{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.hero .strip{color:var(--mute);display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .hero .strip span:first-child{display:inline-flex;align-items:center;gap:8px}
 #setup .hero .strip span:first-child::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--amber)}
 .logo{font-weight:600;font-size:clamp(40px,13vw,56px);line-height:1.05;letter-spacing:-.03em}
@@ -112,7 +121,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .seg button,.chip{background:var(--canvas);border:1px solid var(--line);color:var(--body);font-weight:500}
 .seg button{padding:11px 0;border-radius:12px;font-size:16px}
 .seg button[aria-pressed="true"],.chip[aria-pressed="true"]{border-color:var(--blue);color:var(--blue);background:var(--blue-tint)}
-.note{font-size:13px;color:var(--mute)}
+.note{font-size:14px;color:var(--body)}
 .rules{margin:0;padding:22px 28px 22px 46px;background:var(--canvas);border:1px solid var(--line);border-radius:var(--r-card);color:var(--body);line-height:1.65;font-size:15px}
 .rules li::marker{color:var(--mute);font-weight:600}
 .cta{background:var(--blue);color:#fff;font-weight:500;font-size:16px;padding:15px 20px;border-radius:var(--r-btn)}
@@ -153,30 +162,37 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .ranks .pts{font-weight:600;font-size:22px;letter-spacing:-.02em;color:var(--body)}
 .ranks li.top .pts,.ranks li.top .pos{color:var(--ink)}
 .link{text-align:center;color:var(--blue);font-weight:500;padding:6px}
-@media (prefers-reduced-motion:reduce){.flip,.switch,.switch::after{transition:none}.back .hint span,.card.buzz .front,.timer.warn .num{animation:none}}
+@media (prefers-reduced-motion:reduce){.flip,.switch,.switch::after{transition:none}.back .hint span,.card.buzz .front,.timer.warn .num{animation:none}.btn:active{transform:none}}
 </style>
 </head>
 <body>
 
 <div class="app">
-  <div class="topline"><span>Scores</span><span>Card <b id="roundNum">1/10</b></span></div>
+  <div class="topbar" id="topbar">
+    <span class="label">Card <b id="roundNum">1 of 10</b></span>
+    <button class="textbtn" id="endBtn">End game</button>
+  </div>
+  <div class="endbar" id="endConfirm" hidden>
+    <span>End this game now?</span>
+    <div><button class="btn btn-ghost btn-sm" id="keepBtn">Keep playing</button><button class="btn btn-primary btn-sm" id="endYes">End game</button></div>
+  </div>
   <div class="board" id="board"></div>
 
   <div class="stage">
     <div class="turn" id="turnLine"></div>
 
     <div class="card" id="card">
-      <button class="flip" id="flipBtn" aria-label="Reveal the card and start the timer">
+      <button class="flip" id="flipBtn" aria-label="Reveal the card">
         <div class="face back">
           <div class="strip"><span>Name 3 in 5</span><span>5 sec</span></div>
           <div class="mark">3<small>in 5</small></div>
           <div class="hint">Name three, fast.<span>Tap to reveal</span></div>
         </div>
         <div class="face front" id="front">
-          <div class="eyebrow">Name 3 <span class="cat" id="catLabel"></span></div>
+          <div class="eyebrow"><span>Name 3</span><span class="cat" id="catLabel"></span></div>
           <div class="q" id="question">…</div>
           <div class="cardfoot">
-            <span class="meta" id="cardMeta"></span>
+            <span class="status" id="status">Read it out loud</span>
             <div class="timer" id="timer">
               <svg viewBox="0 0 100 100" aria-hidden="true">
                 <circle class="track" cx="50" cy="50" r="42"/>
@@ -189,15 +205,11 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
       </button>
     </div>
 
-    <div class="verdict" id="verdict" hidden>
-      <button class="btn btn-ghost" id="missBtn">Missed it</button>
-      <button class="btn btn-primary" id="gotBtn">Got all 3 &nbsp;+1</button>
+    <div class="actions" id="actions">
+      <div class="row one" data-phase="ready"><button class="btn btn-primary" id="revealBtn">Reveal card</button></div>
+      <div class="row split" data-phase="revealed" hidden><button class="btn btn-ghost" id="skipBtn">Skip</button><button class="btn btn-primary" id="startTimer">Start timer</button></div>
+      <div class="row" data-phase="play" hidden><button class="btn btn-ghost" id="missBtn">Missed it</button><button class="btn btn-primary" id="gotBtn">Got all 3 &nbsp;+1</button></div>
     </div>
-  </div>
-
-  <div class="footer">
-    <button id="skipBtn">Skip card</button>
-    <button id="newBtn">New game</button>
   </div>
 </div>
 
@@ -311,7 +323,7 @@ function drawCard(){
   current = deck.draw(chosen);
   if(!current){ deck.newGame(); current = deck.draw(chosen); } // tiny pool: allow repeats rather than stall
   $("question").innerHTML = current.text;
-  $("catLabel").textContent = "· " + current.catName;
+  $("catLabel").textContent = current.catName;
   $("front").classList.toggle("adult", current.adult);
 }
 
@@ -361,33 +373,44 @@ function render(){
   });
   const act=b.children[turn]; if(act) act.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"});
   const total=perPlayer*names.length;
-  $("roundNum").textContent = `${Math.min(played+1,total)}/${total}`;
-  const pad=n=>String(n).padStart(2,"0");
-  $("cardMeta").textContent = `${pad(Math.min(played+1,total))} / ${pad(total)}`;
-  $("turnLine").innerHTML = `<strong>${esc(names[turn])}</strong> is on the spot.<br><span>${esc(names[reader])}</span> reads it out loud.`;
+  $("roundNum").textContent = `${Math.min(played+1,total)} of ${total}`;
+  $("turnLine").innerHTML = `<strong>${esc(names[turn])}</strong> answers. <span>${esc(names[reader])}</span> reads.`;
 }
 function setRing(frac){ ring.style.strokeDashoffset = C*(1-frac); }
 
+// Turn flow: ready (card face down) -> revealed (reader reads it out) -> running (5 seconds) -> done.
+function setPhase(next){
+  phase=next;
+  const group = next==="running"||next==="done" ? "play" : next;
+  document.querySelectorAll("#actions .row").forEach(r=>{ r.hidden = r.dataset.phase!==group; });
+  const t=$("timer");
+  t.classList.toggle("idle", next==="ready"||next==="revealed");
+  $("status").textContent = next==="revealed" ? "Read it out loud, then start the timer" : next==="running" ? "Go!" : next==="done" ? "Time's up" : "";
+}
 function resetCard(){
   cancelAnimationFrame(raf);
-  phase="ready";
   $("card").classList.remove("shown","buzz");
-  $("verdict").hidden=true;
   $("timer").classList.remove("warn","done");
   $("num").textContent=SECS; setRing(1);
+  setPhase("ready");
   setTimeout(drawCard, 250);
   render();
 }
-
 function reveal(){
   if(phase!=="ready") return;
-  phase="running";
   $("card").classList.add("shown");
   if(current) deck.markSeen(current);
   beep(660,.12,"triangle");
-  const start = performance.now()+350; let lastSec = SECS;
+  setPhase("revealed");
+  setTimeout(()=>$("startTimer").focus({preventScroll:true}), 50);
+}
+function startTimer(){
+  if(phase!=="revealed") return;
+  setPhase("running");
+  beep(520,.08,"square",.08);
+  const start = performance.now(); let lastSec = SECS;
   const tick = now=>{
-    const left = Math.max(0,SECS-Math.max(0,(now-start)/1000));
+    const left = Math.max(0,SECS-(now-start)/1000);
     setRing(left/SECS);
     const sec = Math.ceil(left);
     if(sec!==lastSec && sec>0){ lastSec=sec; beep(sec<=2?880:520,.08,"square",.08); }
@@ -397,17 +420,17 @@ function reveal(){
     raf=requestAnimationFrame(tick);
   };
   raf=requestAnimationFrame(tick);
-  $("verdict").hidden=false;
 }
 function timeUp(){
-  phase="done";
+  setPhase("done");
   $("timer").classList.add("done"); $("num").textContent="TIME";
   $("card").classList.add("buzz");
   beep(180,.5,"sawtooth",.2);
   try{navigator.vibrate&&navigator.vibrate([120,60,120])}catch(e){}
 }
 function score(got){
-  if(phase==="ready") return;
+  if(phase!=="running" && phase!=="done") return;
+  cancelAnimationFrame(raf);
   if(got){ scores[turn]++; beep(990,.15,"triangle"); }
   played++;
   if(played>=perPlayer*names.length) return finish();
@@ -424,20 +447,29 @@ function finish(){
   $("ranks").innerHTML = order.map((p,i)=>{ if(p.s!==prev){pos=i+1;prev=p.s}
     return `<li class="${p.s===top?"top":""}"><span class="pos">${pos}</span><span class="who">${esc(p.n)}</span><span class="pts">${p.s}</span></li>`;}).join("");
   $("endCount").textContent = `${played} cards played`;
+  hideEndConfirm();
   $("end").hidden=false;
 }
 function newGame(){
   scores=names.map(()=>0); played=0; turn=0;
+  hideEndConfirm();
   deck.newGame();
   $("end").hidden=true; $("setup").hidden=true;
   resetCard();
 }
 
 $("flipBtn").addEventListener("click", reveal);
+$("revealBtn").addEventListener("click", reveal);
+$("startTimer").addEventListener("click", startTimer);
 $("gotBtn").addEventListener("click", ()=>score(true));
 $("missBtn").addEventListener("click", ()=>score(false));
-$("skipBtn").addEventListener("click", ()=>{ if(current && phase==="ready") deck.pass(current); resetCard(); });
-$("newBtn").addEventListener("click", ()=>{ cancelAnimationFrame(raf); draft=names.slice(); renderPlayers(); renderCats(); $("setup").hidden=false; });
+// Skip only exists after the card is revealed, so a stray tap can't burn a turn.
+$("skipBtn").addEventListener("click", ()=>{ if(phase==="revealed") resetCard(); });
+// End game lives at the top, away from the play buttons, and asks first.
+function hideEndConfirm(){ $("endConfirm").hidden=true; $("topbar").hidden=false; }
+$("endBtn").addEventListener("click", ()=>{ $("topbar").hidden=true; $("endConfirm").hidden=false; $("keepBtn").focus(); });
+$("keepBtn").addEventListener("click", ()=>{ hideEndConfirm(); $("endBtn").focus(); });
+$("endYes").addEventListener("click", ()=>{ cancelAnimationFrame(raf); finish(); });
 $("editBtn").addEventListener("click", ()=>{ draft=names.slice(); renderPlayers(); renderCats(); $("end").hidden=true; $("setup").hidden=false; });
 $("againBtn").addEventListener("click", newGame);
 $("addBtn").addEventListener("click", addPlayer);
